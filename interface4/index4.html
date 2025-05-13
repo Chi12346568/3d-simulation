@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Accessibility Settings</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        padding: 50px;
+      }
+
+      .container {
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 30px;
+        width: 720px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .lang-select {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+
+      .lang-select select {
+        padding: 5px 10px;
+        font-weight: bold;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        cursor: pointer;
+      }
+
+      .card h1 {
+        color: #233dd2;
+        font-size: 20px;
+        font-weight: bold;
+        text-shadow: 1px 1px #ccc;
+        margin-bottom: 10px;
+      }
+
+      .instruction {
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px 30px;
+        margin-bottom: 30px;
+      }
+
+      .checkbox-card {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: #fff;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .checkbox-card input[type='checkbox'] {
+        margin-right: 10px;
+      }
+
+      .checkbox-card span {
+        flex: 1;
+      }
+
+      .checkbox-card img {
+        width: 20px;
+        height: 20px;
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 20px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .skip {
+        background-color: #a8f5a8;
+      }
+
+      .confirm {
+        background-color: #a8f5a8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="lang-select">
+        <select
+          id="language"
+          aria-label="Language selection"
+          onchange="changeLanguage(this.value)"
+        >
+          <option value="en">🌐 ENG</option>
+          <option value="fr">🌐 FR</option>
+          <option value="ar">🌐 AR</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h1 id="title">Accessibility Settings for Generated 3D Simulation</h1>
+        <p class="instruction" id="instruction">
+          Please specify the target audience for the generated content
+        </p>
+        <div class="checkbox-grid">
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="lowVision">Low vision</span>
+            <img
+              src="https://img.icons8.com/ios/24/000000/visible--v1.png"
+              alt=""
+            />
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="adhd">ADHD</span>
+            <img src="https://img.icons8.com/ios/24/000000/brain.png" alt="" />
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="colorBlind">Color Blindness</span>
+            <img
+              src="https://img.icons8.com/ios/24/000000/paint-palette.png"
+              alt=""
+            />
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="deaf">Deafness</span>
+            <img
+              src="https://cdn-icons-png.freepik.com/512/1272/1272820.png"
+              alt=""
+            />
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="dyslexia">Dyslexia</span>
+            <img src="https://img.icons8.com/ios/24/000000/brain.png" alt="" />
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" />
+            <span id="hearing">Hard of hearing</span>
+            <img
+              src="https://img.icons8.com/ios/24/000000/hearing.png"
+              alt=""
+            />
+          </label>
+        </div>
+        <div class="buttons">
+          <button class="btn skip" id="skip" onclick="goToNextScreen()">
+            Skip
+          </button>
+          <button class="btn confirm" id="confirm" onclick="confirmSelection()">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const translations = {
+        en: {
+          title: 'Accessibility Settings for Generated 3D Simulation',
+          instruction:
+            'Please specify the target audience for the generated content',
+          lowVision: 'Low vision',
+          adhd: 'ADHD',
+          colorBlind: 'Color Blindness',
+          deaf: 'Deafness',
+          dyslexia: 'Dyslexia',
+          hearing: 'Hard of hearing',
+          skip: 'Skip',
+          confirm: 'Confirm',
+        },
+        fr: {
+          title: "Paramètres d'accessibilité pour la simulation 3D générée",
+          instruction:
+            'Veuillez spécifier le public cible pour le contenu généré',
+          lowVision: 'Déficience visuelle',
+          adhd: 'TDAH',
+          colorBlind: 'Daltonisme',
+          deaf: 'Surdité',
+          dyslexia: 'Dyslexie',
+          hearing: 'Malentendant',
+          skip: 'Ignorer',
+          confirm: 'Confirmer',
+        },
+        ar: {
+          title: 'إعدادات إمكانية الوصول للمحاكاة الثلاثية الأبعاد',
+          instruction: 'يرجى تحديد الجمهور المستهدف للمحتوى المُولَد',
+          lowVision: 'ضعف البصر',
+          adhd: 'فرط الحركة',
+          colorBlind: 'عمى الألوان',
+          deaf: 'الصمم',
+          dyslexia: 'عسر القراءة',
+          hearing: 'ضعف السمع',
+          skip: 'تخطي',
+          confirm: 'تأكيد',
+        },
+      }
+
+      function changeLanguage(lang) {
+        const keys = Object.keys(translations[lang])
+        keys.forEach((key) => {
+          const el = document.getElementById(key)
+          if (el) el.textContent = translations[lang][key]
+        })
+        document.body.dir = lang === 'ar' ? 'rtl' : 'ltr'
+      }
+
+      function goToNextScreen() {
+        // No accessibility options selected, proceed to next interface
+        localStorage.setItem('accessibilitySettings', JSON.stringify([]))
+        // Mark steps as completed
+        localStorage.setItem('stepsCompleted', 'true')
+        window.location.href = '../interface5/index5.html'
+      }
+
+      function confirmSelection() {
+        const selected = []
+        document
+          .querySelectorAll('.checkbox-card input[type="checkbox"]')
+          .forEach((checkbox, i) => {
+            if (checkbox.checked) {
+              const label =
+                checkbox.parentElement.querySelector('span').innerText
+              selected.push(label)
+            }
+          })
+
+        // Save accessibility settings to localStorage
+        localStorage.setItem('accessibilitySettings', JSON.stringify(selected))
+
+        // Mark steps as completed
+        localStorage.setItem('stepsCompleted', 'true')
+
+        // Navigate to interface5
+        window.location.href = '../interface5/index5.html'
+      }
+    </script>
+  </body>
+</html>

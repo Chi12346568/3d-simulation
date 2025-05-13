@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Generate 3D Simulation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 700px;
+        margin: auto;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        color: #1c2b90;
+        text-shadow: 2px 2px 4px #aaa;
+        margin: 0;
+      }
+
+      .lang-toggle {
+        margin-right: 10px;
+      }
+
+      .lang-select {
+        padding: 5px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-weight: bold;
+      }
+
+      .prompt-label {
+        font-weight: normal;
+        font-size: 18px;
+        color: #000;
+        display: inline-block;
+        padding-bottom: 4px;
+        margin-top: 20px;
+      }
+
+      .prompt-input {
+        width: 100%;
+        height: 140px;
+        padding: 10px;
+        font-size: 14px;
+        margin: 10px 0 30px 0;
+        border-radius: 4px;
+        border: 1px solid #aaa;
+        resize: vertical;
+        white-space: pre-wrap;
+      }
+
+      .button-row {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .action-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        background-color: #a8e6a3;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 2px 2px 4px #bbb;
+        transition: background 0.3s;
+      }
+
+      .action-btn:hover {
+        background-color: #94d68f;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@<version>/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@<version>/examples/jsm/"
+        }
+      }
+    </script>
+    <script>
+      // OpenAI API key
+      const OPENAI_API_KEY =
+        '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'
+
+      const translations = {
+        en: {
+          title: 'Generate 3D Simulation',
+          promptLabel: 'Type Your Prompt ?',
+          promptStructure: `---- Visualization Instructions ----
+For data structures like stacks, queues, etc:
+1. Use 3-5 colored blocks/objects to represent elements
+2. Add buttons for operations (push/pop for stacks, enqueue/dequeue for queues)
+3. Show clear animations when elements are added or removed
+4. Include labels to identify parts of the structure
+
+For algorithms:
+1. Display the data being processed (e.g., array for sorting)
+2. Add controls to step through the algorithm
+3. Highlight elements being compared or swapped
+4. Show the algorithm's progress visually
+
+Specific requirements:
+- Use bright colors (red, green, blue) for important elements
+- Keep the scene simple and focused on the concept
+- Add clear text labels for all buttons and components
+- Make all animations smooth and educational`,
+          buttons: [
+            'Add object',
+            'Delete',
+            'Regenerate',
+            'New prompt',
+            'Confirm',
+          ],
+        },
+        fr: {
+          title: 'Générer une simulation 3D',
+          promptLabel: 'Tapez votre invite ?',
+          promptStructure: `Ajoutez un [objet] à la [position relative : "devant", "au-dessus", "à droite de", ou "à gauche de"] du [objet de référence], en l'orientant de manière cohérente avec ce dernier (Orientation, Alignement, Haut/Bas, Rotation).\n\nAjoutez un [objet] [couleur] à la [position relative] du [objet de référence], orienté de façon à ce que [détail d'orientation].`,
+          buttons: [
+            'Ajouter objet',
+            'Supprimer',
+            'Régénérer',
+            'Nouvelle invite',
+            'Confirmer',
+          ],
+        },
+        ar: {
+          title: 'إنشاء محاكاة ثلاثية الأبعاد',
+          promptLabel: 'اكتب التعليمات؟',
+          promptStructure: `أضف [كائن] إلى [الموضع النسبي: "أمام"، "أعلى"، "يمين"، "يسار"] بالنسبة إلى [الكائن المرجعي]، وقم بتوجيهه بما يتماشى مع الكائن المرجعي (اتجاه، محاذاة، لأعلى/لأسفل، تدوير).\n\nأضف [كائن] [لون] إلى [الموضع النسبي] بالنسبة إلى [الكائن المرجعي]، موجهًا بحيث [تفصيل الاتجاه].`,
+          buttons: [
+            'إضافة كائن',
+            'حذف',
+            'إعادة توليد',
+            'تعليمة جديدة',
+            'تأكيد',
+          ],
+        },
+      }
+
+      function changeLanguage(lang) {
+        const t = translations[lang]
+        document.querySelector('.header h1').innerText = t.title
+        document.querySelector('.prompt-label').innerText = t.promptLabel
+
+        // Only overwrite the input if it's empty or matches one of the default templates
+        const promptInput = document.querySelector('.prompt-input')
+        if (
+          !promptInput.value ||
+          Object.values(translations).some(
+            (tr) => tr.promptStructure === promptInput.value
+          )
+        ) {
+          promptInput.value = t.promptStructure
+        }
+
+        const buttons = document.querySelectorAll('.action-btn')
+        buttons.forEach((btn, i) => {
+          if (t.buttons[i]) btn.innerText = t.buttons[i]
+        })
+      }
+
+      // Function to add an object to the 3D scene
+      async function addObject() {
+        const promptInput = document.querySelector('.prompt-input')
+        promptInput.value += '\n\n// Add a new object:\nAdd a '
+        promptInput.focus()
+      }
+
+      // Function to delete an object from the 3D scene
+      async function deleteObject() {
+        const promptInput = document.querySelector('.prompt-input')
+        promptInput.value += '\n\n// Delete an object:\nRemove the '
+        promptInput.focus()
+      }
+
+      // Function to regenerate the 3D visualization with modified instructions
+      async function regenerate() {
+        const promptText = document.querySelector('.prompt-input').value.trim()
+        if (!promptText) {
+          alert('Please enter instructions for the 3D visualization.')
+          return
+        }
+
+        // Check if the prompt has changed from what we last used
+        const lastPromptData = localStorage.getItem('lastPromptData')
+        let previousInstructions = ''
+
+        if (lastPromptData) {
+          try {
+            const parsedData = JSON.parse(lastPromptData)
+            previousInstructions = parsedData.customInstructions || ''
+          } catch (e) {
+            console.error('Error parsing last prompt data:', e)
+          }
+        }
+
+        // If the instructions haven't changed and we have code, inform the user
+        const hasVisualizationCode = localStorage.getItem('3dVisualizationCode')
+        if (hasVisualizationCode && previousInstructions === promptText) {
+          const confirmRegenerate = confirm(
+            "The instructions haven't changed since the last generation. Do you still want to regenerate the visualization?"
+          )
+          if (!confirmRegenerate) return
+        }
+
+        // Save the current prompt to localStorage
+        localStorage.setItem('visualizationPrompt', promptText)
+
+        // Mark steps as completed to ensure visualization is automatically loaded in interface5
+        localStorage.setItem('stepsCompleted', 'true')
+
+        // Update the code in localStorage
+        try {
+          const loadingIndicator = document.createElement('div')
+          loadingIndicator.textContent = 'Generating new visualization...'
+          loadingIndicator.style.padding = '20px'
+          loadingIndicator.style.backgroundColor = '#f0f0f0'
+          loadingIndicator.style.borderRadius = '5px'
+          loadingIndicator.style.margin = '20px 0'
+          loadingIndicator.style.textAlign = 'center'
+          document.querySelector('.container').appendChild(loadingIndicator)
+
+          // Get the current concept and example from localStorage
+          const concept =
+            localStorage.getItem('userPrompt') || 'Data Structure Visualization'
+          const chapterTopic = localStorage.getItem('chapterTopic') || ''
+          const example = localStorage.getItem('formattedExample') || ''
+
+          // Save the prompt data for interface5 to use
+          const accessibilitySettings = JSON.parse(
+            localStorage.getItem('accessibilitySettings') || '[]'
+          )
+
+          // Create and save prompt data that will be used by interface5
+          const promptData = {
+            concept: concept,
+            accessibility: accessibilitySettings,
+            example: example,
+            customInstructions: promptText,
+          }
+          localStorage.setItem('lastPromptData', JSON.stringify(promptData))
+
+          // Force regeneration by removing the existing code if the prompt has changed
+          if (previousInstructions !== promptText && hasVisualizationCode) {
+            console.log(
+              'Prompt changed, clearing previous visualization code to force regeneration'
+            )
+            localStorage.removeItem('3dVisualizationCode')
+          }
+
+          // Set button state for auto-generation in interface5
+          localStorage.setItem('buttonState', 'generated')
+
+          // Show a more detailed status message
+          loadingIndicator.innerHTML = `
+            <strong>Generating visualization for:</strong> ${
+              concept || chapterTopic
+            }<br>
+            <small>This may take 10-20 seconds...</small>
+          `
+
+          // Call OpenAI to generate updated code
+          const response = await fetch(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: 'gpt-4.1',
+                messages: [
+                  {
+                    role: 'system',
+                    content: `You are a 3D visualization expert specializing in educational Three.js visualizations. 
+                Your SOLE output MUST be executable JavaScript code for Three.js.
+                Do NOT include any markdown, explanations, or any text other than the JavaScript code itself.
+                The code should run directly in a browser environment where Three.js is already available via ES6 imports.
+                
+                REQUIREMENTS:
+                1. Scene Setup: Initialize a scene with proper lighting, camera, and renderer in a <div> with id '3d-canvas'.
+                2. ES6 Imports: Assume Three.js is imported like: import * as THREE from 'three';
+                3. Simple Geometry: Use basic geometries (boxes, spheres, cylinders) with distinct colors.
+                4. Limited Scope: Focus on a small, manageable visualization that clearly demonstrates the concept.
+                5. Error Handling: Include try/catch blocks for robust error handling within the generated code.
+                6. Performance: Optimize for performance with simple materials and limited objects.
+                7. Interactivity: Add buttons for key operations (e.g., push/pop for stacks).
+                8. Animation: Include smooth animations for operations.
+                9. Code Structure: Include setup, animation, and interaction functions.
+                
+                Return ONLY executable JavaScript code.`,
+                  },
+                  {
+                    role: 'user',
+                    content: `Create a 3D visualization for: ${concept}
+                ${chapterTopic ? `Chapter/Topic: ${chapterTopic}` : ''}
+                
+                Example explanation: ${example}
+                
+                Additional visualization instructions:
+                ${promptText}
+                
+                VISUALIZATION GUIDELINES:
+                - Keep the visualization SIMPLE and FOCUSED on the core concept
+                - Use clear colors and shapes that are easy to distinguish
+                - Include UI elements (buttons, sliders) for interactivity
+                - Add text labels to explain parts of the visualization
+                - Create smooth animations for operations
+                - Ensure the scene is properly lit and objects are clearly visible
+                - Handle window resize events
+                - The code must be complete and work when executed in a browser with Three.js already loaded
+                - Clean up resources when not needed (remove event listeners, dispose geometries)
+                
+                DO NOT create complex scenes like entire theme parks, cities, or elaborate environments.
+                Focus on the SPECIFIC concept requested with minimal supporting elements.`,
+                  },
+                ],
+                temperature: 0.7, // Lower temperature for more deterministic output
+                max_tokens: 3500, // Increased token limit for more complete code
+              }),
+            }
+          )
+
+          const result = await response.json()
+          if (result.error) {
+            throw new Error(result.error.message)
+          }
+
+          // Get the generated code
+          const generatedCode = result.choices[0].message.content.trim()
+
+          // Basic validation to make sure we got actual code
+          if (
+            !generatedCode ||
+            generatedCode.trim().length < 100 || // Check for a reasonable length
+            !(
+              generatedCode.includes('THREE.') ||
+              generatedCode.includes('new THREE.')
+            ) // More robust check for Three.js usage
+          ) {
+            throw new Error(
+              'Generated code appears incomplete, invalid, or does not use Three.js as expected.'
+            )
+          }
+
+          // Save the updated code to localStorage
+          localStorage.setItem('3dVisualizationCode', generatedCode)
+
+          // Update the loading indicator
+          loadingIndicator.innerHTML = `
+            <strong>Visualization code updated successfully!</strong><br>
+            <span style="color: green; font-size: 24px;">✓</span><br>
+            Click "Confirm" to see the changes.
+          `
+          loadingIndicator.style.backgroundColor = '#e6ffe6'
+          loadingIndicator.style.border = '1px solid #a8f5a8'
+        } catch (error) {
+          console.error('Error generating updated 3D code:', error)
+
+          const loadingIndicator = document.querySelector(
+            '.container > div:last-child'
+          )
+          if (loadingIndicator) {
+            loadingIndicator.innerHTML = `
+              <strong style="color: #cc0000;">Error generating visualization:</strong><br>
+              ${error.message}<br>
+              <button onclick="regenerate()" style="margin-top: 10px; padding: 5px 10px;">Try Again</button>
+            `
+            loadingIndicator.style.backgroundColor = '#fff0f0'
+            loadingIndicator.style.border = '1px solid #ffcccc'
+          } else {
+            alert('Error generating updated visualization: ' + error.message)
+          }
+        }
+      }
+
+      // Function to start a new prompt (go back to interface1)
+      function newPrompt() {
+        window.location.href = '../interface1/index1.html?new=true'
+      }
+
+      // Function to confirm changes and return to the visualization interface
+      function confirmChanges() {
+        // Make sure we mark steps as completed so interface5 knows to load the visualization
+        localStorage.setItem('stepsCompleted', 'true')
+        window.location.href = '../interface5/index5.html'
+      }
+
+      // On page load
+      window.onload = function () {
+        changeLanguage('en')
+
+        // Load the current visualization prompt from localStorage if available
+        let savedPrompt = localStorage.getItem('visualizationPrompt')
+
+        // If there's custom instructions in lastPromptData, prioritize those
+        const lastPromptData = localStorage.getItem('lastPromptData')
+        if (lastPromptData) {
+          try {
+            const promptData = JSON.parse(lastPromptData)
+            if (promptData.customInstructions) {
+              savedPrompt = promptData.customInstructions
+            }
+          } catch (e) {
+            console.error('Error parsing saved prompt data:', e)
+          }
+        }
+
+        if (savedPrompt) {
+          document.querySelector('.prompt-input').value = savedPrompt
+        }
+
+        // Load the concept details for context
+        const concept = localStorage.getItem('userPrompt') || ''
+        const chapterTopic = localStorage.getItem('chapterTopic') || ''
+        if (concept || chapterTopic) {
+          const header = document.querySelector('.header h1')
+          header.innerHTML = `Generate <span>3D Simulation</span>: ${
+            chapterTopic || concept
+          }`
+        }
+      }
+    </script>
+  </head>
+  <body onload="changeLanguage('en')">
+    <div class="container">
+      <div class="header">
+        <h1>Generate <span>3D Simulation</span></h1>
+        <div class="lang-toggle">
+          <select class="lang-select" onchange="changeLanguage(this.value)">
+            <option value="en">🌐 ENG</option>
+            <option value="fr">🌐 FR</option>
+            <option value="ar">🌐 AR</option>
+          </select>
+        </div>
+      </div>
+
+      <h2 class="prompt-label">Type Your Prompt ?</h2>
+
+      <textarea class="prompt-input"></textarea>
+
+      <div class="button-row">
+        <button class="action-btn" onclick="addObject()">Add object</button>
+        <button class="action-btn" onclick="deleteObject()">Delete</button>
+        <button class="action-btn" onclick="regenerate()">Regenerate</button>
+        <button class="action-btn" onclick="newPrompt()">New prompt</button>
+        <button class="action-btn" onclick="confirmChanges()">Confirm</button>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Goal-Setting Interface</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .container {
+        background-color: #fefefe;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        padding: 30px 40px;
+        max-width: 600px;
+        width: 100%;
+        position: relative;
+      }
+      .lang-select {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      .lang-select select {
+        font-size: 14px;
+        padding: 5px;
+      }
+      h2 {
+        color: #233dd2;
+        font-size: 22px;
+        font-weight: bold;
+        text-shadow: 1px 1px 1px #ccc;
+        margin-bottom: 8px;
+      }
+      p {
+        font-weight: 600;
+        color: #444;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      label {
+        display: block;
+        margin-top: 15px;
+        font-size: 15px;
+        color: #222;
+      }
+      input[type='text'],
+      textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      textarea {
+        resize: none;
+        height: 70px;
+      }
+      textarea:required {
+        border-color: #f44336;
+      }
+      .submit-section {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+      .submit-section button {
+        background-color: #a5d6a7;
+        color: black;
+        padding: 10px 20px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .submit-section button:hover {
+        background-color: #a8f5a8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="lang-select">
+        <select
+          id="language"
+          aria-label="Language selection"
+          onchange="switchLanguage(this.value)"
+        >
+          <option value="ENG">🌐ENG</option>
+          <option value="FR">🌐FR</option>
+          <option value="AR">🌐AR</option>
+        </select>
+      </div>
+
+      <h2 id="title">The Goal-Setting Interface</h2>
+      <p id="subtitle">Find a Real-World Example For a Given Course Concept</p>
+
+      <form onsubmit="generateExample(); return false;">
+        <label for="courseTitle" id="courseLabel"
+          >What’s your course title ? (optional)</label
+        >
+        <input
+          type="text"
+          id="courseTitle"
+          placeholder="Data structure course"
+        />
+
+        <label for="chapterTopic" id="chapterLabel"
+          >What’s the topic of the chapter ? (optional)</label
+        >
+        <input
+          type="text"
+          id="chapterTopic"
+          placeholder="Stack data structure"
+        />
+
+        <label for="prompt" id="promptLabel"
+          >Type your prompt <span style="color: red">*</span></label
+        >
+        <textarea
+          id="prompt"
+          placeholder="Give me a real-world example to illustrate the stack data structure."
+          required
+        ></textarea>
+
+        <div class="submit-section">
+          <button type="submit" id="submitButton">Generate Example</button>
+        </div>
+      </form>
+
+      <div class="result" id="resultArea"></div>
+    </div>
+
+    <script>
+      // OpenAI API key
+      const OPENAI_API_KEY =
+        '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'
+
+      async function generateExample() {
+        const courseTitle = document.getElementById('courseTitle').value.trim()
+        const chapterTopic = document
+          .getElementById('chapterTopic')
+          .value.trim()
+        const prompt = document.getElementById('prompt').value.trim()
+
+        if (!prompt) {
+          alert('Please enter a prompt to generate an example.')
+          return
+        }
+
+        // Show loading state
+        document.getElementById('submitButton').disabled = true
+        document.getElementById('submitButton').innerText = 'Generating...'
+        document.getElementById('resultArea').innerText = 'Loading...'
+
+        try {
+          // Call OpenAI API
+          const response = await fetch(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                  {
+                    role: 'system',
+                    content:
+                      'You are a helpful assistant providing clear, concise real-world examples of computer science and programming concepts. Focus on creating examples that can be visualized in 3D.',
+                  },
+                  {
+                    role: 'user',
+                    content: `Course: ${courseTitle || 'Computer Science'}
+                          Chapter: ${chapterTopic || 'Data Structures'}
+                          Please give me a clear, real-world example to illustrate: ${prompt}
+                          The example should be concrete, easy to understand, and possible to visualize in 3D.`,
+                  },
+                ],
+                temperature: 0.7,
+                max_tokens: 500,
+              }),
+            }
+          )
+
+          const result = await response.json()
+          console.log('API Response:', result)
+
+          if (result.error) {
+            throw new Error(result.error.message || 'Error calling OpenAI API')
+          }
+
+          const generatedExample = result.choices[0].message.content
+
+          // Save to localStorage
+          localStorage.setItem('courseTitle', courseTitle)
+          localStorage.setItem('chapterTopic', chapterTopic)
+          localStorage.setItem('userPrompt', prompt)
+          localStorage.setItem('generatedExample', generatedExample)
+
+          // Display the result
+          document.getElementById('resultArea').innerText = generatedExample
+
+          // Enable continue to next interface
+          const resultArea = document.getElementById('resultArea')
+          resultArea.innerHTML = `
+          ${generatedExample}
+          <div style="margin-top: 20px; text-align: right;">
+            <button onclick="continueToNext()" style="background-color: #a8f5a8; border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer;">Continue to Next Step</button>
+          </div>
+        `
+        } catch (error) {
+          console.error('Error:', error)
+          document.getElementById('resultArea').innerText =
+            'Error generating example: ' + error.message
+        } finally {
+          // Reset button state
+          document.getElementById('submitButton').disabled = false
+          document.getElementById('submitButton').innerText =
+            document
+              .getElementById('submitButton')
+              .getAttribute('data-original-text') || 'Generate Example'
+        }
+      }
+
+      function continueToNext() {
+        localStorage.removeItem('3dVisualizationCode')
+        window.location.href = '../interface2/index2.html'
+      }
+
+      function switchLanguage(lang) {
+        const translations = {
+          ENG: {
+            title: 'The Goal-Setting Interface',
+            subtitle: 'Find a Real-World Example For a Given Course Concept',
+            courseLabel: "What's your course title ? (optional)",
+            chapterLabel: "What's the topic of the chapter ? (optional)",
+            promptLabel: "Type your prompt <span style='color:red'>*</span>",
+            submitButton: 'Generate Example',
+          },
+          FR: {
+            title: "Interface de Définition d'Objectifs",
+            subtitle: 'Trouvez un exemple réel pour un concept de cours donné',
+            courseLabel: 'Quel est le titre de votre cours ? (optionnel)',
+            chapterLabel: 'Quel est le sujet du chapitre ? (optionnel)',
+            promptLabel:
+              "Tapez votre consigne <span style='color:red'>*</span>",
+            submitButton: 'Générer un exemple',
+          },
+          AR: {
+            title: 'واجهة تحديد الأهداف',
+            subtitle: 'ابحث عن مثال واقعي لمفهوم في المقرر الدراسي',
+            courseLabel: 'ما هو عنوان المقرر الخاص بك؟ (اختياري)',
+            chapterLabel: 'ما هو موضوع الفصل؟ (اختياري)',
+            promptLabel:
+              "اكتب التعليمات الخاصة بك <span style='color:red'>*</span>",
+            submitButton: 'إنشاء مثال',
+          },
+        }
+
+        const t = translations[lang]
+        document.getElementById('title').innerText = t.title
+        document.getElementById('subtitle').innerText = t.subtitle
+        document.getElementById('courseLabel').innerHTML = t.courseLabel
+        document.getElementById('chapterLabel').innerHTML = t.chapterLabel
+        document.getElementById('promptLabel').innerHTML = t.promptLabel
+
+        const submitButton = document.getElementById('submitButton')
+        submitButton.innerText = t.submitButton
+        submitButton.setAttribute('data-original-text', t.submitButton)
+
+        // Set direction for Arabic
+        document.body.dir = lang === 'AR' ? 'rtl' : 'ltr'
+      }
+
+      // On page load, check if there's data in localStorage and pre-fill the form
+      window.onload = function () {
+        // Check if we're starting fresh or should clear previous data
+        const startFresh =
+          new URLSearchParams(window.location.search).get('new') === 'true'
+        if (startFresh) {
+          // Clear all previous visualization data
+          localStorage.removeItem('courseTitle')
+          localStorage.removeItem('chapterTopic')
+          localStorage.removeItem('userPrompt')
+          localStorage.removeItem('generatedExample')
+          localStorage.removeItem('formattedExample')
+          localStorage.removeItem('accessibilitySettings')
+          localStorage.removeItem('3dVisualizationCode')
+          localStorage.removeItem('visualizationPrompt')
+        }
+
+        const courseTitle = localStorage.getItem('courseTitle')
+        const chapterTopic = localStorage.getItem('chapterTopic')
+        const userPrompt = localStorage.getItem('userPrompt')
+
+        if (courseTitle)
+          document.getElementById('courseTitle').value = courseTitle
+        if (chapterTopic)
+          document.getElementById('chapterTopic').value = chapterTopic
+        if (userPrompt) document.getElementById('prompt').value = userPrompt
+
+        // Store original button text for translation purposes
+        const submitButton = document.getElementById('submitButton')
+        submitButton.setAttribute('data-original-text', submitButton.innerText)
+      }
+    </script>
+  </body>
+</html>

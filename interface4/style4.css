@@ -1,0 +1,85 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  padding: 50px;
+}
+
+.container {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 30px;
+  width: 600px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.language {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+
+.lang-button {
+  border: none;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.title {
+  color: #233dd2;
+  font-weight: bold;
+  text-shadow: 1px 1px #ccc;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.subtitle {
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.icon {
+  margin-left: auto;
+}
+
+.buttons {
+  margin-top: 30px;
+  text-align: right;
+}
+
+.skip, .confirm {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.skip {
+  background-color: #c4ecc4;
+  margin-right: 10px;
+}
+
+.confirm {
+  background-color: #8df58d;
+}

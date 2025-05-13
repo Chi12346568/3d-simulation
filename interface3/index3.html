@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edit Font or Style</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .frame {
+        position: relative;
+        margin: auto 0;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 900px;
+        width: 95%;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      .header h2 {
+        color: #3333cc;
+        margin: 0;
+      }
+      .lang-select {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      .lang-select select {
+        padding: 6px 10px;
+        font-size: 14px;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+      }
+      .editor-container {
+        display: flex;
+        width: 100%;
+        min-height: 300px;
+      }
+      .text-area,
+      .preview-area {
+        flex: 1;
+        background: white;
+        border: 2px solid #aabbff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .text-area {
+        background-color: #f4f8ff;
+      }
+      .preview-area {
+        background-color: #f4f8ff;
+      }
+      .toolbar {
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .toolbar button,
+      .toolbar select {
+        margin-right: 4px;
+        padding: 6px 10px;
+        font-size: 14px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .toolbar button:hover,
+      .toolbar select:hover {
+        background-color: #eee;
+      }
+      #textInput {
+        width: 100%;
+        height: 250px;
+        padding: 10px;
+        font-size: 14px;
+        resize: vertical;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .preview-content {
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        min-height: 250px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: white;
+        overflow-y: auto;
+      }
+      .confirm-btn {
+        margin-top: 20px;
+        padding: 10px 30px;
+        background-color: #b2f0b2;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        float: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <!-- Title + Language Selector Header -->
+      <div class="header">
+        <h2>Edit Font or Style</h2>
+        <div class="lang-select">
+          <select
+            id="language"
+            aria-label="Language selection"
+            onchange="switchLang(this.value)"
+          >
+            <option value="en">🌐 ENG</option>
+            <option value="fr">🌐 FR</option>
+            <option value="ar">🌐 AR</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="editor-container">
+        <div class="text-area">
+          <div class="toolbar">
+            <button onclick="wrapSelection('<b>', '</b>')" title="Bold">
+              𝐁
+            </button>
+            <button onclick="wrapSelection('<i>', '</i>')" title="Italic">
+              𝑰
+            </button>
+            <button onclick="wrapSelection('<u>', '</u>')" title="Underline">
+              U̲
+            </button>
+            <button onclick="wrapSelection('<h3>', '</h3>')" title="Heading">
+              H₃
+            </button>
+            <button
+              onclick="wrapSelection('<ul><li>', '</li></ul>')"
+              title="Bullet List"
+            >
+              • List
+            </button>
+            <button
+              onclick="wrapSelection('<ol><li>', '</li></ol>')"
+              title="Numbered List"
+            >
+              1. List
+            </button>
+            <select onchange="changeColor(this.value)">
+              <option value="">Color</option>
+              <option value="black">Black</option>
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+            </select>
+            <select onchange="changeAlign(this.value)">
+              <option value="">Align</option>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+            <select onchange="changeFontSize(this.value)">
+              <option value="">Font Size</option>
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="18px">18px</option>
+              <option value="20px">20px</option>
+            </select>
+            <button onclick="applyToPreview()" title="Preview">🔁</button>
+          </div>
+          <textarea id="textInput" oninput="applyToPreview()"></textarea>
+        </div>
+        <div class="preview-area">
+          <div class="preview-content" id="preview"></div>
+        </div>
+      </div>
+      <button class="confirm-btn">Confirm</button>
+    </div>
+
+    <script>
+      const translations = {
+        en: `A real-life example of a stack is a stack of books on a desk.
+
+<b>How it Works:</b><br>
+1. When you <span style="color:green"><b>add a new book</b></span> to the stack, it goes on top of the pile (pushed onto the stack).<br>
+2. When you need a book, you take the <span style="color:red"><b>top book</b></span> from the stack (pop from the stack).<br>
+3. The last book you added is the first one you’ll <span style="color:green"><b>remove</b></span>, following the <span style="color:purple"><b>LIFO (Last In, First Out)</b></span> principle.<br><br>
+So, the most recently placed book is the first one you grab, just like how elements are added and removed from a stack in programming.`,
+
+        fr: `Un exemple réel d'une pile est une pile de livres sur un bureau.
+
+<b>Comment ça marche :</b><br>
+1. Lorsque vous <span style="color:green"><b>ajoutez un nouveau livre</b></span>, il est placé en haut de la pile (empilé).<br>
+2. Lorsque vous avez besoin d’un livre, vous prenez le <span style="color:red"><b>livre du dessus</b></span> (désempilé).<br>
+3. Le dernier livre ajouté est le premier à être <span style="color:green"><b>retiré</b></span>, selon le principe <span style="color:purple"><b>LIFO (Last In, First Out)</b></span>.<br><br>
+Ainsi, le livre le plus récemment placé est le premier que vous prenez, comme pour une pile en programmation.`,
+
+        ar: `<div style="direction: rtl; text-align: right;">
+مثال واقعي على المكدس هو كومة من الكتب على المكتب.
+
+<b>كيف يعمل:</b><br>
+١. عندما <span style="color:green"><b>تضيف كتابًا جديدًا</b></span> إلى المكدس، يتم وضعه في الأعلى (يدفع إلى المكدس).<br>
+٢. عندما تحتاج إلى كتاب، تأخذ <span style="color:red"><b>الكتاب العلوي</b></span> من المكدس (يُزال من الأعلى).<br>
+٣. آخر كتاب أضفته هو أول ما ستقوم <span style="color:green"><b>بإزالته</b></span>، وفقًا لمبدأ <span style="color:purple"><b>LIFO (الأحدث يدخل أولاً يخرج أولاً)</b></span>.<br><br>
+لذا، فإن الكتاب الذي تم وضعه مؤخرًا هو أول ما تلتقطه، تمامًا مثل كيفية إضافة العناصر وإزالتها في البرمجة.</div>`,
+      }
+
+      function applyToPreview() {
+        const input = document.getElementById('textInput').value
+        const styled = input.replace(/\n/g, '<br>')
+        document.getElementById('preview').innerHTML = styled
+      }
+
+      function wrapSelection(startTag, endTag) {
+        const textarea = document.getElementById('textInput')
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        const selectedText = textarea.value.substring(start, end)
+        const before = textarea.value.substring(0, start)
+        const after = textarea.value.substring(end)
+        textarea.value = before + startTag + selectedText + endTag + after
+        textarea.focus()
+        textarea.setSelectionRange(
+          before.length + startTag.length,
+          before.length + startTag.length + selectedText.length
+        )
+        applyToPreview()
+      }
+
+      function changeColor(color) {
+        if (!color) return
+        wrapSelection(`<span style='color:${color}'>`, '</span>')
+      }
+
+      function changeAlign(align) {
+        if (!align) return
+        wrapSelection(`<div style='text-align:${align}'>`, '</div>')
+      }
+
+      function changeFontSize(size) {
+        if (!size) return
+        wrapSelection(`<span style='font-size:${size}'>`, '</span>')
+      }
+
+      function switchLang(lang) {
+        const textarea = document.getElementById('textInput')
+        textarea.value = translations[lang].replace(/<br>/g, '\n') // Set raw text
+        applyToPreview() // Update preview with HTML tags
+      }
+
+      window.onload = () => {
+        // Load the formatted example from localStorage if available
+        const formattedExample = localStorage.getItem('generatedExample')
+        if (formattedExample) {
+          document.getElementById('textInput').value = formattedExample.replace(
+            /<br>/g,
+            '\n'
+          )
+          applyToPreview()
+        } else {
+          // Default to English translation if no content exists
+          switchLang('en')
+        }
+      }
+
+      // Override the close button to navigate to interface4
+      document
+        .querySelector('.confirm-btn')
+        .addEventListener('click', function (e) {
+          e.preventDefault()
+
+          // Save the formatted text to localStorage
+          const formattedText = document.getElementById('preview')
+          localStorage.setItem('formattedExample', formattedText.innerHTML)
+
+          console.log('Formatted Text:', formattedText.innerText)
+          localStorage.setItem(
+            'lastPromptData',
+            JSON.stringify({
+              accessibility: [],
+              example: '',
+              concept: '',
+              content: formattedText.innerText,
+            })
+          )
+
+          // Navigate to interface4
+          window.location.href = '../interface4/index4.html'
+        })
+    </script>
+  </body>
+</html>

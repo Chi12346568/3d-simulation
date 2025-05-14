@@ -76,9 +76,10 @@
         align-items: center;
         margin-bottom: 20px;
       }
-      .header h2 {
+       h2 {
         margin: 0;
-        font-size: 24px;
+        font-size: 28px;
+        font-weight: bold;
         color: #233dd2;
       }
     </style>
@@ -147,8 +148,7 @@
         // Add title information
         const courseTitle =
           localStorage.getItem('courseTitle') || 'Computer Science'
-        const chapterTopic =
-          localStorage.getItem('chapterTopic') || 'Data Structure'
+        
 
         document.querySelector(
           'h2'
